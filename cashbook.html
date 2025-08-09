@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>कैशबुक ऐप</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f6fa;
+    margin: 0; padding: 20px;
+    display: flex; justify-content: center;
+    min-height: 100vh;
+  }
+  .app {
+    background: white;
+    max-width: 700px;
+    width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    padding: 25px 30px;
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    color: #5a2d82;
+    text-align: center;
+    margin-bottom: 25px;
+  }
+  #accountSelect, #newAccountBtn {
+    font-size: 16px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 2px solid #764ba2;
+    margin-bottom: 20px;
+  }
+  #newAccountBtn {
+    background: #764ba2;
+    color: white;
+    cursor: pointer;
+    border: none;
+    width: fit-content;
+    align-self: flex-end;
+  }
+  #newAccountBtn:hover {
+    background: #5a2d82;
+  }
+  .btnGroup {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .btnGroup button {
+    flex: 1;
+    padding: 12px 0;
+    margin: 0 10px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+  }
+  .btnGroup button:first-child {
+    background: #dc3545;
+  }
+  .btnGroup button:first-child:hover {
+    background: #a52a2a;
+  }
+  .btnGroup button:last-child {
+    background: #198754;
+  }
+  .btnGroup button:last-child:hover {
+    background: #0f5132;
+  }
+  #transactionList {
+    max-height: 350px;
+    overflow-y: auto;
+    background: #fafafa;
+    border-radius: 12px;
+    box-shadow: inset 0 0 8px #ccc;
+    padding: 12px 20px;
+  }
+  .txnItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 8px;
+    border-bottom: 1px solid #ddd;
+  }
+  .txnLeft {
+    flex: 1;
+  }
+  .txnType {
+    padding: 4px 12px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    text-transform: uppercase;
+  }
+  .debit {
+    background-color: #dc3545;
+  }
+  .credit {
+    background-color: #198754;
+  }
+  .txnDesc {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+  }
+  .txnDate {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+  }
+  .txnAmount {
+    font-weight: 700;
+    margin-left: 15px;
+    min-width: 80px;
+    text-align: right;
+  }
+  .txnButtons button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    margin-left: 15px;
+    color: #555;
+  }
+  .txnButtons button:hover {
+    color: #000;
+  }
+  #balanceDisplay {
+    margin-top: 15px;
+    font-weight: 700;
+    font-size: 20px;
+    text-align: right;
+    color: #5a2d82;
+  }
+  /* Modal Styles */
+  #modalBg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  #modalBg.active {
+    display: flex;
+  }
+  #modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 400px;
+    width: 90%;
+    padding: 28px 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  }
+  #modal h2 {
+    margin-top: 0;
+    margin-bottom: 18px;
+    font-weight: 700;
+    color: #5a2d82;
+    text-align: center;
+  }
+  #transactionForm label {
+    display: block;
+    font-weight: 700;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    color: #444;
+  }
+  #transactionForm input, #transactionForm textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1.7px solid #bbb;
+    font-size: 15px;
+    resize: vertical;
+  }
+  #transactionForm input:focus, #transactionForm textarea:focus {
+    outline: none;
+    border-color: #764ba2;
+  }
+  #transactionForm textarea {
+    min-height: 70px;
+  }
+  #modalButtons {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  #modalButtons button {
+    padding: 12px 22px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    margin-left: 15px;
+    color: white;
+  }
+  #cancelBtn {
+    background: #999;
+  }
+  #cancelBtn:hover {
+    background: #666;
+  }
+  #saveBtn.debit {
+    background: #dc3545;
+  }
+  #saveBtn.debit:hover {
+    background: #a52a2a;
+  }
+  #saveBtn.credit {
+    background: #198754;
+  }
+  #saveBtn.credit:hover {
+    background: #0f5132;
+  }
+</style>
+</head>
+<body>
+
+<div class="app" role="main" aria-label="कैशबुक एप">
+  <h1>कैशबुक</h1>
+
+  <select id="accountSelect" aria-label="अकाउंट चुनें"></select>
+  <button id="newAccountBtn" aria-label="नया अकाउंट बनाएँ">➕ नया अकाउंट</button>
+
+  <div class="btnGroup">
+    <button id="debitBtn" aria-label="डेबिट जोड़ें">डेबिट ➖</button>
+    <button id="creditBtn" aria-label="क्रेडिट जोड़ें">क्रेडिट ➕</button>
+  </div>
+
+  <div id="transactionList" aria-live="polite" aria-relevant="additions removals"></div>
+  <div id="balanceDisplay" aria-live="polite" aria-atomic="true">बैलेंस: ₹0.00</div>
+</div>
+
+<!-- Modal -->
+<div id="modalBg" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div id="modal">
+    <h2 id="modalTitle">ट्रांजेक्शन जोड़ें</h2>
+    <form id="transactionForm" novalidate>
+      <label for="txnAmount">राशि (₹)</label>
+      <input type="number" id="txnAmount" min="0.01" step="0.01" required placeholder="राशि दर्ज करें" />
+
+      <label for="txnDate">दिनांक</label>
+      <input type="date" id="txnDate" required />
+
+      <label for="txnDesc">विवरण</label>
+      <textarea id="txnDesc" maxlength="150" required placeholder="विवरण लिखें..."></textarea>
+
+      <div id="modalButtons">
+        <button type="button" id="cancelBtn">रद्द करें</button>
+        <button type="submit" id="saveBtn" class="debit">सहेजें</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let accounts = {};
+  let currentAccount = null;
+  let editingIndex = null; // null means new txn
+  let currentType = "Debit"; // or "Credit"
+
+  const accountSelect = document.getElementById('accountSelect');
+  const newAccountBtn = document.getElementById('newAccountBtn');
+  const transactionList = document.getElementById('transactionList');
+  const balanceDisplay = document.getElementById('balanceDisplay');
+  const debitBtn = document.getElementById('debitBtn');
+  const creditBtn = document.getElementById('creditBtn');
+  const modalBg = document.getElementById('modalBg');
+  const modalTitle = document.getElementById('modalTitle');
+  const transactionForm = document.getElementById('transactionForm');
+  const txnAmountInput = document.getElementById('txnAmount');
+  const txnDateInput = document.getElementById('txnDate');
+  const txnDescInput = document.getElementById('txnDesc');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const saveBtn = document.getElementById('saveBtn');
+
+  // Load accounts from localStorage
+  function loadAccounts() {
+    const data = localStorage.getItem('cashbook_accounts');
+    accounts = data ? JSON.parse(data) : {};
+  }
+
+  // Save accounts to localStorage
+  function saveAccounts() {
+    localStorage.setItem('cashbook_accounts', JSON.stringify(accounts));
+  }
+
+  // Populate account dropdown
+  function populateAccounts() {
+    accountSelect.innerHTML = '';
+    const keys = Object.keys(accounts);
+    if(keys.length === 0) {
+      accountSelect.innerHTML = '<option value="">कोई अकाउंट नहीं</option>';
+      currentAccount = null;
+      clearUI();
+      return;
+    }
+    keys.forEach(acc => {
+      const option = document.createElement('option');
+      option.value = acc;
+      option.textContent = acc;
+      accountSelect.appendChild(option);
+    });
+    currentAccount = accountSelect.value || keys[0];
+    accountSelect.value = currentAccount;
+    updateUI();
+  }
+
+  // Clear transaction list and balance
+  function clearUI() {
+    transactionList.innerHTML = '';
+    balanceDisplay.textContent = 'बैलेंस: ₹0.00';
+  }
+
+  // Insert transaction in sorted order by date ascending
+  function insertSorted(txns, txnObj) {
+    const newDate = new Date(txnObj.date).getTime();
+    let idx = txns.findIndex(t => new Date(t.date).getTime() > newDate);
+    if(idx === -1) {
+      txns.push(txnObj);
+    } else {
+      txns.splice(idx, 0, txnObj);
+    }
+  }
+
+  // Update UI list and balance
+  function updateUI() {
+    if(!currentAccount || !accounts[currentAccount]) {
+      clearUI();
+      return;
+    }
+    const txns = accounts[currentAccount].transactions;
+
+    transactionList.innerHTML = '';
+    txns.forEach((txn,i) => {
+      const div = document.createElement('div');
+      div.className = 'txnItem';
+
+      div.innerHTML = `
+        <div class="txnLeft">
+          <span class="txnType ${txn.type.toLowerCase()}">${txn.type}</span> ₹${txn.amount.toFixed(2)}
+          <div class="txnDesc">${txn.description}</div>
+          <div class="txnDate">${new Date(txn.date).toLocaleDateString('hi-IN')}</div>
+        </div>
+        <div class="txnButtons">
+          <button class="editBtn" aria-label="एडिट करें">✏️</button>
+          <button class="deleteBtn" aria-label="डिलीट करें">🗑️</button>
+        </div>
+      `;
+
+      div.querySelector('.editBtn').onclick = () => openModal('edit', i);
+      div.querySelector('.deleteBtn').onclick = () => {
+        if(confirm('क्या आप इस ट्रांजेक्शन को डिलीट करना चाहते हैं?')) {
+          accounts[currentAccount].transactions.splice(i,1);
+          saveAccounts();
+          updateUI();
+        }
+      };
+
+      transactionList.appendChild(div);
+    });
+
+    let balance = 0;
+    txns.forEach(t => {
+      if(t.type === 'Credit') balance += t.amount;
+      else balance -= t.amount;
+    });
+    balanceDisplay.textContent = `बैलेंस: ₹${balance.toFixed(2)}`;
+  }
+
+  // Open modal for add/edit
+  function openModal(mode, index=null) {
+    editingIndex = null;
+    transactionForm.reset();
+    txnDateInput.value = new Date().toISOString().slice(0,10);
+
+    if(mode === 'add-debit') {
+      currentType = 'Debit';
+      modalTitle.textContent = 'डेबिट ट्रांजेक्शन जोड़ें';
+      saveBtn.className = 'debit';
+      editingIndex = null;
+    } else if(mode === 'add-credit') {
+      currentType = 'Credit';
+      modalTitle.textContent = 'क्रेडिट ट्रांजेक्शन जोड़ें';
+      saveBtn.className = 'credit';
+      editingIndex = null;
+    } else if(mode === 'edit') {
+      modalTitle.textContent = 'ट्रांजेक्शन संपादित करें';
+      editingIndex = index;
+      const txn = accounts[currentAccount].transactions[index];
+      currentType = txn.type;
+      txnAmountInput.value = txn.amount;
+      txnDateInput.value = new Date(txn.date).toISOString().slice(0,10);
+      txnDescInput.value = txn.description;
+      saveBtn.className = txn.type.toLowerCase();
+    }
+    modalBg.classList.add('active');
+  }
+
+  // Close modal
+  function closeModal() {
+    modalBg.classList.remove('active');
+    editingIndex = null;
+  }
+
+  // Save transaction handler
+  transactionForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const amount = parseFloat(txnAmountInput.value);
+    const date = txnDateInput.value;
+    const desc = txnDescInput.value.trim();
+
+    if(amount <= 0) {
+      alert('कृपया वैध राशि दर्ज करें।');
+      return;
+    }
+    if(!date) {
+      alert('कृपया दिनांक चुनें।');
+      return;
+    }
+    if(desc.length === 0) {
+      alert('कृपया विवरण दर्ज करें।');
+      return;
+    }
+
+    const txnObj = { type: currentType, amount, date, description: desc };
+
+    if(editingIndex === null) {
+      insertSorted(accounts[currentAccount].transactions, txnObj);
+    } else {
+      accounts[currentAccount].transactions[editingIndex] = txnObj;
+      accounts[currentAccount].transactions.sort((a,b) => new Date(a.date) - new Date(b.date));
+    }
+
+    saveAccounts();
+    updateUI();
+    closeModal();
+  });
+
+  cancelBtn.onclick = closeModal;
+  debitBtn.onclick = () => openModal('add-debit');
+  creditBtn.onclick = () => openModal('add-credit');
+
+  accountSelect.onchange = e => {
+    currentAccount = e.target.value;
+    updateUI();
+  };
+
+  newAccountBtn.onclick = () => {
+    const name = prompt('नया अकाउंट नाम दर्ज करें:');
+    if(name && name.trim().length > 0) {
+      if(accounts[name.trim()]) {
+        alert('यह अकाउंट पहले से मौजूद है।');
+        return;
+      }
+      accounts[name.trim()] = { transactions: [] };
+      saveAccounts();
+      populateAccounts();
+      accountSelect.value = name.trim();
+      currentAccount = name.trim();
+      updateUI();
+    }
+  };
+
+  // Initialize app
+  loadAccounts();
+  populateAccounts();
+
+</script>
+</body>
+</html>
